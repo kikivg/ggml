@@ -741,8 +741,10 @@ bool ggml_metal_add_buffer(
             size_aligned += (size_page - (size_aligned % size_page));
         }
 
+        const size_t maxBufferLength = 1024 * 1024 * 1024; // 1 GiB
+
         // the buffer fits into the max buffer size allowed by the device
-        if (size_aligned <= ctx->device.maxBufferLength) {
+        if (size_aligned <= maxBufferLength) {
             ctx->buffers[ctx->n_buffers].name = name;
             ctx->buffers[ctx->n_buffers].data = data;
             ctx->buffers[ctx->n_buffers].size = size;
@@ -761,8 +763,8 @@ bool ggml_metal_add_buffer(
             // this overlap between the views will guarantee that the tensor with the maximum size will fully fit into
             // one of the views
             const size_t size_ovlp = ((max_size + size_page - 1) / size_page + 1) * size_page; // round-up 2 pages just in case
-            const size_t size_step = ctx->device.maxBufferLength - size_ovlp;
-            const size_t size_view = ctx->device.maxBufferLength;
+            const size_t size_step = maxBufferLength - size_ovlp;
+            const size_t size_view = maxBufferLength;
 
             for (size_t i = 0; i < size; i += size_step) {
                 const size_t size_step_aligned = (i + size_view <= size) ? size_view : (size_aligned - i);
@@ -2648,8 +2650,10 @@ ggml_backend_buffer_t ggml_backend_metal_buffer_from_ptr(void * data, size_t siz
 
     id<MTLDevice> device = ggml_backend_metal_get_device();
 
+    const size_t maxBufferLength = 1024 * 1024 * 1024; // 1 GiB
+
     // the buffer fits into the max buffer size allowed by the device
-    if (size_aligned <= device.maxBufferLength) {
+    if (size_aligned <= maxBufferLength) {
         ctx->buffers[ctx->n_buffers].data = data;
         ctx->buffers[ctx->n_buffers].size = size;
 
@@ -2667,8 +2671,8 @@ ggml_backend_buffer_t ggml_backend_metal_buffer_from_ptr(void * data, size_t siz
         // this overlap between the views will guarantee that the tensor with the maximum size will fully fit into
         // one of the views
         const size_t size_ovlp = ((max_size + size_page - 1) / size_page + 1) * size_page; // round-up 2 pages just in case
-        const size_t size_step = device.maxBufferLength - size_ovlp;
-        const size_t size_view = device.maxBufferLength;
+        const size_t size_step = maxBufferLength - size_ovlp;
+        const size_t size_view = maxBufferLength;
 
         for (size_t i = 0; i < size; i += size_step) {
             const size_t size_step_aligned = (i + size_view <= size) ? size_view : (size_aligned - i);
